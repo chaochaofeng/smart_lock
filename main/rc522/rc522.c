@@ -1,9 +1,12 @@
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "esp_log.h"
 
 #include "rc522.h"
 #include "mfrc522.h"
+#include "key.h"
 //#include <string.h> 
 
 #define delay_10ms(x) vTaskDelay(x * 10 / portTICK_PERIOD_MS);
@@ -595,4 +598,122 @@ void WaitCardOff(void)
 		}
 		delay_10ms(100);
 	}
+}
+
+
+static void dump_buff(unsigned char *buff, unsigned int len)
+{
+    for(unsigned int i=0;i<len;i++)
+    {
+        printf("%02X ",buff[i]);
+    }
+
+    printf("\n");
+}
+
+#define TAG "RC522"
+
+void InitializeSystem()
+{
+    rc522_io_init();
+
+	LED_OFF;
+	vTaskDelay(10 / portTICK_PERIOD_MS);
+
+	PcdReset();
+	PcdAntennaOff(); 
+	PcdAntennaOn();  
+	M500PcdConfigISOType( 'A' );
+	LED_ON;
+	vTaskDelay(10 / portTICK_PERIOD_MS);
+	LED_OFF;
+	vTaskDelay(10 / portTICK_PERIOD_MS);
+	LED_ON;
+	vTaskDelay(10 / portTICK_PERIOD_MS);
+	LED_OFF;
+}
+
+static void lock_ctl(void)
+{
+    int state = get_lock_state();
+
+    switch (state) {
+    case KEY_POWER:
+        set_unlock();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        set_lock();
+        break;
+    case KEY_UNLOCK:
+        set_power();
+        break;
+    case KEY_LOCK:
+        set_unlock();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        set_power();
+        break;
+    default:
+        set_unlock();
+        break;
+    }
+}
+
+void rfid_task(void *pvParameters)
+{
+	char status;
+	unsigned char snr, buf[16], TagType[2], SelectedSnr[4], DefaultKey[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; 
+    unsigned char id[4] = {0xED, 0x14, 0xE4, 0x39};
+
+    while (1)
+    {
+        status= PcdRequest(REQ_ALL,TagType);
+        if(!status)
+        {
+            ESP_LOGI(TAG, "TagType:%02X %02X\n", TagType[0],TagType[1]);
+
+            status = PcdAnticoll(SelectedSnr);
+            if(!status)
+            {
+                ESP_LOGI(TAG, "SelectedSnr : %02X %02X %02X %02X\n", SelectedSnr[0],SelectedSnr[1],SelectedSnr[2],SelectedSnr[3]);
+
+                status=PcdSelect(SelectedSnr);
+                if(!status)
+                {
+                    snr = 0;  //扇区号1
+                    status = PcdAuthState(KEYA, (snr*4+3), DefaultKey, SelectedSnr);// 校验1扇区密码，密码位于每一扇区第3块
+                    {
+                        if(!status)
+                        {
+                            status = PcdRead((snr*4+0), buf);  // 读卡，读取1扇区0块数据到buf[0]-buf[16] 
+                            //status = PcdWrite((snr*4+0), buf);  // 写卡，将buf[0]-buf[16]写入1扇区0块
+                            if(!status)
+                            {
+                                dump_buff(buf, 16);
+                                if (!memcmp(buf, id, sizeof(id)))
+                                {
+                                    ESP_LOGI(TAG, "find key card");
+                                    lock_ctl();
+                                }
+
+                                //读写成功，点亮LED
+                                LED_ON;	
+                                WaitCardOff();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+        
+        LED_OFF; 
+    }
+}
+
+
+void rfid_task_init(void)
+{
+    InitializeSystem( );
+
+    xTaskCreate(rfid_task, "rfid_task", 4096, NULL, tskIDLE_PRIORITY + 5, NULL);
 }

@@ -26,6 +26,7 @@ extern void SetBitMask(unsigned char reg,unsigned char mask);
 extern void ClearBitMask(unsigned char reg,unsigned char mask); 
 extern char M500PcdConfigISOType(unsigned char type);
 extern void WaitCardOff(void);
+void rfid_task_init(void);
 
 /* MF522 命令字 ------------------------------------------------- */
 #define PCD_IDLE              0x00               //取消当前命令
