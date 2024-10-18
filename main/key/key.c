@@ -4,7 +4,6 @@
 #include "esp_log.h"
 
 #include "key.h"
-#include "ble_ctl.h"
 
 #define KEY_UNLOCK_PIN  3
 #define KEY_LOCK_PIN    4
@@ -50,8 +49,6 @@ void set_unlock(void)
 
     key_press(KEY_UNLOCK_PIN);
     lock_state = KEY_UNLOCK;
-
-    notify_state_to_app(KEY_UNLOCK);
 }
 
 void set_lock(void)
@@ -60,8 +57,6 @@ void set_lock(void)
 
     key_press(KEY_LOCK_PIN);
     lock_state = KEY_LOCK;
-
-    notify_state_to_app(KEY_LOCK);
 }
 
 void set_power(void)
@@ -75,8 +70,6 @@ void set_power(void)
     key_press(KEY_POWER_PIN);
 
     lock_state = KEY_POWER;
-
-    notify_state_to_app(KEY_POWER);
 }
 
 int get_lock_state(void)

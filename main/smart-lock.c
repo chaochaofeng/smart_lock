@@ -38,5 +38,6 @@ void app_main(void)
     }
 
     rfid_task_init();
+
     ble_ctl_init();
 }
