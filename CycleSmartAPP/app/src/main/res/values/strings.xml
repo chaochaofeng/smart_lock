@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">CycleSmart</string>
+    <string name="lockbutton">lockbutton</string>
+    <string name="icon">icon</string>
+    <string name="lockbtn">lockbtn</string>
+    <string name="spinner_title">spinner_title</string>
+</resources>

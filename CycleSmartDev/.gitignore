@@ -1,0 +1,17 @@
+.vscode
+build
+CycleSmart/*.iml
+CycleSmart/.gradle
+CycleSmart/local.properties
+CycleSmart/.idea/caches
+CycleSmart/.idea/libraries
+CycleSmart/.idea/modules.xml
+CycleSmart/.idea/workspace.xml
+CycleSmart/.idea/navEditor.xml
+CycleSmart/.idea/assetWizardSettings.xml
+CycleSmart/.DS_Store
+CycleSmart/build
+CycleSmart/captures
+CycleSmart/.externalNativeBuild
+CycleSmart/.cxx
+CycleSmart/local.properties

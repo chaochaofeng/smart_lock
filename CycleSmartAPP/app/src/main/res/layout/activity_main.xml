@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Spinner
+        android:id="@+id/dev_spinner"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="100dp"
+        android:layout_above="@+id/button_lock"
+        android:prompt="@string/spinner_title"
+        />
+    <ImageButton
+        android:id="@+id/button_lock"
+        android:background="@drawable/shape_circle_gray"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:src="@drawable/unlock100x_icon"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:contentDescription="@string/lockbtn"
+        />
+
+    <Button
+        android:background="@drawable/shape_circle_gray"
+        android:id="@+id/button_pwr"
+        android:textColor="@color/white"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/button_lock"
+        android:layout_marginTop="20dp"
+        android:text="POWER" />
+
+</RelativeLayout>
