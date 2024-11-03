@@ -8,6 +8,7 @@
 #include "mfrc522.h"
 #include "key.h"
 #include "ble_ctl.h"
+#include "beep.h"
 //#include <string.h> 
 
 #define delay_10ms(x) vTaskDelay(x * 10 / portTICK_PERIOD_MS);
@@ -29,9 +30,6 @@ void rc522_io_init(void)
     gpio_config(&io_conf);
 
     io_conf.pin_bit_mask = 1ULL << MF522_NSS_PIN;
-    gpio_config(&io_conf);
-
-    io_conf.pin_bit_mask = 1ULL << LED_PIN;
     gpio_config(&io_conf);
 
     io_conf.pin_bit_mask = 1ULL << MF522_MISO_PIN;
@@ -631,6 +629,8 @@ static void lock_ctl(bool twice)
 
     switch (state) {
     case KEY_POWER:
+		beep_mode(KEY_UNLOCK);
+
         set_unlock();
 
         notify_state_to_app(KEY_UNLOCK);
@@ -640,21 +640,25 @@ static void lock_ctl(bool twice)
         break;
     case KEY_UNLOCK:
         if (twice) {
+			beep_mode(KEY_LOCK);
             set_lock();
             notify_state_to_app(KEY_LOCK);
             set_state_to_gatt(KEY_LOCK);
         } else {
+			beep_mode(KEY_POWER);
             set_power();
             notify_state_to_app(KEY_POWER);
             set_state_to_gatt(KEY_POWER);
         }
         break;
     case KEY_LOCK:
+		beep_mode(KEY_UNLOCK);
         set_unlock();
         notify_state_to_app(KEY_UNLOCK);
         set_state_to_gatt(KEY_UNLOCK);
         break;
     default:
+		beep_mode(KEY_UNLOCK);
         set_unlock();
         notify_state_to_app(KEY_UNLOCK);
         set_state_to_gatt(KEY_UNLOCK);
@@ -708,7 +712,8 @@ void rfid_task(void *pvParameters)
             goto delay;
 
         ESP_LOGI(TAG, "TagType:%02X %02X\n", TagType[0],TagType[1]);
-        ble_get_state_from_gatt();
+
+		beep_short();
 
         status = PcdAnticoll(SelectedSnr);
         if(status)
@@ -741,14 +746,10 @@ void rfid_task(void *pvParameters)
             xSemaphoreGive(xSemaphore);
         }
 
-        //读写成功，点亮LED
-        LED_ON;	
         WaitCardOff();
 
 delay:
-        vTaskDelay(300 / portTICK_PERIOD_MS);
-
-        LED_OFF; 
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 }
 

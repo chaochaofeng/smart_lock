@@ -26,6 +26,7 @@
 #include "rc522.h"
 #include "mfrc522.h"
 #include "ble_ctl.h"
+#include "beep.h"
 
 void app_main(void)
 {
@@ -37,6 +38,8 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
+
+	beep_init();
 
     key_init();
 
