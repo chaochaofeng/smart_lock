@@ -22,6 +22,7 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
+#include "key.h"
 #include "rc522.h"
 #include "mfrc522.h"
 #include "ble_ctl.h"
@@ -36,6 +37,8 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
+
+    key_init();
 
     rfid_task_init();
 
