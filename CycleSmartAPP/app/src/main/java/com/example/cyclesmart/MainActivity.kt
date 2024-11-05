@@ -20,8 +20,11 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -62,6 +65,7 @@ class MainActivity : ComponentActivity(), View.OnClickListener {
     private val semaphore = Semaphore(0)
     private lateinit var mGatt: BluetoothGatt
     private lateinit var cycleble: CycleBluetooth
+    private var devnameslist = mutableListOf("Select Dev")
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onClick(v: View?) {
@@ -110,6 +114,12 @@ class MainActivity : ComponentActivity(), View.OnClickListener {
                     }
                     else -> {
                         Toast.makeText(this, "正在连接蓝牙", Toast.LENGTH_SHORT).show()
+                        devnameslist.clear()
+
+                        devnameslist.add("Select Dev")
+
+                        val spinner = findViewById<Spinner>(R.id.dev_spinner)
+                        spinner.setSelection(0)
 
                         cycleble.finddev = 0
                         startBluetoothDiscovery()
@@ -182,45 +192,8 @@ class MainActivity : ComponentActivity(), View.OnClickListener {
 
         startBluetoothDiscovery()
         Log.d(tAG, "start bluetooth scan")
-        //mainThread()
     }
 
-    /*
-    private fun mainThread() {
-
-        val thread = Thread {
-            if (ActivityCompat.checkSelfPermission(
-                    applicationContext,
-                    Manifest.permission.BLUETOOTH_SCAN
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-            }
-            val handler = Handler(Looper.getMainLooper())
-
-            while (true) {
-                semaphore.acquire()
-                if (cycleble.finddev == 1)
-                    continue
-
-                Thread.sleep(10000)
-
-                if (cycleble.finddev == 0) {
-                    bluetoothAdapter.cancelDiscovery()
-                    Thread.sleep(10000)
-
-                }
-
-                bluetoothAdapter.cancelDiscovery()
-
-                if (cycleble.finddev == 1 && !cycleble.connect_state) {
-                    Log.d(tAG, "start connect device")
-                    connectedDevice?.let { connectToDevice(it) }
-                    Thread.sleep(5000)
-                }
-            }
-        }.start()
-    }
-*/
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
@@ -239,18 +212,30 @@ class MainActivity : ComponentActivity(), View.OnClickListener {
 
                         if (device.name != null) {
                             Log.d(tAG, "find: " + device.name + " mac: " + device.getAddress() + " rssi: " + rssi)
-                        }
 
-                        if (device.getAddress() == myDevAdder) {
-                            bluetoothAdapter.cancelDiscovery()
+                            if (devnameslist.contains(device.name + " " + device.getAddress())) {
+                                return
+                            }
 
-                            connectedDevice = device
+                            devnameslist.add(device.name + " " + device.getAddress())
 
-                            connectToDevice(device)
+                            val spinner = findViewById<Spinner>(R.id.dev_spinner)
+                            val adapter = ArrayAdapter(applicationContext, R.layout.drop_item, devnameslist)
+                            spinner.adapter = adapter
 
-                            cycleble.finddev = 1
+                            if (device.name == "CycleSmart") {
+                                bluetoothAdapter.cancelDiscovery()
 
-                            semaphore.release()
+                                connectToDevice(device)
+
+                                connectedDevice = device
+
+                                spinner.setSelection(devnameslist.indexOf(device.name))
+
+                                cycleble.finddev = 1
+
+                                semaphore.release()
+                            }
                         }
                     }
                     else {
