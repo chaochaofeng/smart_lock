@@ -9,7 +9,7 @@
 #define KEY_LOCK_PIN    4
 #define KEY_POWER_PIN   5
 
-#define KEY_PRESS_STATE 0
+#define KEY_PRESS_STATE 1
 
 static int lock_state = 0;
 
@@ -19,14 +19,20 @@ void key_init(void)
 {
     gpio_config_t io_conf = {
         .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = 1ULL << KEY_UNLOCK_PIN
+        .pin_bit_mask = 1ULL << KEY_UNLOCK_PIN,
+        .pull_up_en = 0,
+        .pull_down_en = 1,
+        .intr_type = GPIO_INTR_DISABLE
     };
+
     gpio_config(&io_conf);
 
     io_conf.pin_bit_mask = 1ULL << KEY_LOCK_PIN;
     gpio_config(&io_conf);
 
     io_conf.pin_bit_mask = 1ULL << KEY_POWER_PIN;
+    io_conf.pull_up_en = 1;
+    io_conf.pull_down_en = 0;
     gpio_config(&io_conf);
 
     gpio_set_level(KEY_UNLOCK_PIN, !KEY_PRESS_STATE);
@@ -38,7 +44,7 @@ static void key_press(int key)
 {
     gpio_set_level(key, KEY_PRESS_STATE);
 
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
 
     gpio_set_level(key, !KEY_PRESS_STATE);
 }
@@ -65,7 +71,7 @@ void set_power(void)
 
     key_press(KEY_POWER_PIN);
 
-    vTaskDelay(300 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     key_press(KEY_POWER_PIN);
 
